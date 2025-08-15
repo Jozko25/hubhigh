@@ -79,7 +79,7 @@ html {
   }
 }
 
-/* Ensure smooth looping without jumps */
+/* Mobile-optimized infinite scroll animation */
 @keyframes scroll-mobile {
   0% {
     transform: translateX(0);
@@ -89,13 +89,10 @@ html {
   }
 }
 
-/* Alternative mobile animation that prevents spinning */
-@keyframes scroll-mobile-smooth {
+/* Seamless loop animation for mobile */
+@keyframes scroll-mobile-seamless {
   0% {
     transform: translateX(0);
-  }
-  50% {
-    transform: translateX(-50%);
   }
   100% {
     transform: translateX(-50%);
@@ -112,14 +109,16 @@ html {
   transform: translateZ(0);
   backface-visibility: hidden;
   /* Prevent animation glitches */
-  animation-fill-mode: both;
+  animation-fill-mode: none;
   animation-iteration-count: infinite;
+  /* Ensure seamless looping */
+  animation-timing-function: linear;
 }
 
 /* Faster animation on mobile */
 @media (max-width: 768px) {
   .animate-scroll {
-    --animation-duration: 15s;
+    --animation-duration: 20s;
     /* Mobile-specific optimizations */
     -webkit-overflow-scrolling: touch;
     transform: translate3d(0, 0, 0);
@@ -128,8 +127,11 @@ html {
     perspective: 1000px;
     /* Ensure smooth scrolling */
     will-change: transform;
-    /* Use mobile-optimized animation */
-    animation: scroll-mobile-smooth var(--animation-duration) linear infinite;
+    /* Disable CSS animation on mobile - use JavaScript instead */
+    animation: none !important;
+    /* Ensure no pauses or jumps */
+    animation-fill-mode: none;
+    animation-iteration-count: infinite;
   }
   
   /* Additional mobile optimizations for logo containers */

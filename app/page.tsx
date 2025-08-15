@@ -38,18 +38,49 @@ const useLogoAnimationFix = () => {
     const fixLogoAnimation = () => {
       const logoContainer = document.getElementById('logo-scroll-container');
       if (logoContainer && window.innerWidth <= 768) {
-        // Reset animation on mobile to prevent spinning
+        // Remove CSS animation and use JavaScript-based scrolling
         logoContainer.style.animation = 'none';
-        logoContainer.offsetHeight; // Trigger reflow
-        logoContainer.style.animation = 'scroll-mobile-smooth 15s linear infinite';
+        logoContainer.style.transform = 'translateX(0)';
+        
+        // Start JavaScript-based infinite scroll
+        animationId = startInfiniteScroll(logoContainer);
       }
     };
 
+    // JavaScript-based infinite scroll for mobile
+    const startInfiniteScroll = (container: HTMLElement) => {
+      let scrollPosition = 0;
+      const scrollSpeed = 0.8; // pixels per frame - slightly slower for smoothness
+      const singleSetWidth = container.scrollWidth / 3; // One-third because we have three sets
+      
+      const scroll = () => {
+        scrollPosition -= scrollSpeed;
+        
+        // Reset position when we've scrolled one set width
+        if (scrollPosition <= -singleSetWidth) {
+          scrollPosition = 0;
+        }
+        
+        container.style.transform = `translateX(${scrollPosition}px)`;
+        requestAnimationFrame(scroll);
+      };
+      
+      const animationId = requestAnimationFrame(scroll);
+      return animationId;
+    };
+
+    let animationId: number | null = null;
+    
     // Fix on mount and resize
     fixLogoAnimation();
     window.addEventListener('resize', fixLogoAnimation);
     
-    return () => window.removeEventListener('resize', fixLogoAnimation);
+    return () => {
+      window.removeEventListener('resize', fixLogoAnimation);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
   }, []);
 };
 
@@ -868,6 +899,24 @@ hlavne fungujú.
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                   <motion.div
                     key={`second-${num}`}
+                    className="flex-shrink-0 w-24 h-24 sm:w-40 sm:h-40 group relative"
+                    whileHover={{ scale: 1.05, rotateY: 15 }}
+                    transition={{ duration: 0.3 }}
+                    viewport={{ once: true }}
+                  >
+                    <div className="relative overflow-hidden rounded-xl transition-all duration-300 w-full h-full">
+                      <img 
+                        src={`/klienti/${num}.png`}
+                        alt={`Klient ${num}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </motion.div>
+                ))}
+                {/* Third set for extra smooth looping */}
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <motion.div
+                    key={`third-${num}`}
                     className="flex-shrink-0 w-24 h-24 sm:w-40 sm:h-40 group relative"
                     whileHover={{ scale: 1.05, rotateY: 15 }}
                     transition={{ duration: 0.3 }}

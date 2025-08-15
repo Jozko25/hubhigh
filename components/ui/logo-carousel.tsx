@@ -13,25 +13,41 @@ export const LogoCarousel = () => {
     if (!container) return;
 
     let currentPosition = 0;
-    const speed = 0.5; // Slower speed for smoother animation
+    const speed = 0.3; // Much slower speed for desktop, smooth animation
+    let singleSetWidth = 0;
+    
+    // Calculate dimensions once after component mounts
+    const calculateDimensions = () => {
+      // Wait for images to load and get accurate dimensions
+      const logos = container.querySelectorAll('[data-logo]');
+      if (logos.length === 0) return;
+      
+      const firstLogo = logos[0] as HTMLElement;
+      const logoRect = firstLogo.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      // Calculate actual gap between logos
+      const secondLogo = logos[1] as HTMLElement;
+      const secondLogoRect = secondLogo.getBoundingClientRect();
+      const actualGap = secondLogoRect.left - logoRect.right;
+      
+      // Calculate width of exactly 10 logos (one complete set)
+      singleSetWidth = (logoRect.width + actualGap) * 10;
+      
+      console.log('Calculated dimensions:', { 
+        logoWidth: logoRect.width, 
+        gap: actualGap, 
+        singleSetWidth 
+      });
+    };
     
     const animate = () => {
-      if (!container) return;
-      
-      // Get fresh dimensions on each frame to handle responsive changes
-      const firstSet = container.children[0] as HTMLElement;
-      if (!firstSet) return;
-      
-      // Calculate the width of one complete set (first 10 logos)
-      const logoWidth = firstSet.offsetWidth;
-      const gap = 16; // gap-4 = 16px on mobile, gap-8 = 32px on desktop
-      const actualGap = window.innerWidth >= 640 ? 32 : 16;
-      const singleSetWidth = (logoWidth + actualGap) * 10; // 10 logos per set
+      if (!container || singleSetWidth === 0) return;
       
       currentPosition -= speed;
       
-      // Reset position when one complete set has scrolled
-      if (currentPosition <= -singleSetWidth) {
+      // Reset position seamlessly when one complete set has scrolled
+      if (Math.abs(currentPosition) >= singleSetWidth) {
         currentPosition = 0;
       }
       
@@ -39,11 +55,17 @@ export const LogoCarousel = () => {
       animationFrameId = requestAnimationFrame(animate);
     };
 
-    // Start animation immediately
-    setIsAnimating(true);
-    animate();
+    // Wait a bit for layout to settle, then calculate and start
+    const initTimeout = setTimeout(() => {
+      calculateDimensions();
+      if (singleSetWidth > 0) {
+        setIsAnimating(true);
+        animate();
+      }
+    }, 200);
     
     return () => {
+      clearTimeout(initTimeout);
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
@@ -90,6 +112,7 @@ export const LogoCarousel = () => {
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
               <motion.div
                 key={`first-${num}`}
+                data-logo="true"
                 className="flex-shrink-0 w-24 h-24 sm:w-40 sm:h-40 group relative"
                 whileHover={{ scale: 1.05, rotateY: 15 }}
                 transition={{ duration: 0.3 }}
@@ -109,6 +132,7 @@ export const LogoCarousel = () => {
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
               <motion.div
                 key={`second-${num}`}
+                data-logo="true"
                 className="flex-shrink-0 w-24 h-24 sm:w-40 sm:h-40 group relative"
                 whileHover={{ scale: 1.05, rotateY: 15 }}
                 transition={{ duration: 0.3 }}

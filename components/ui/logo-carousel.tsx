@@ -1,56 +1,53 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 export const LogoCarousel = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  let animationId: number | null = null;
+  const [isAnimating, setIsAnimating] = useState(false);
+  let animationFrameId: number | null = null;
 
   useEffect(() => {
-    const fixLogoAnimation = () => {
-      const logoContainer = containerRef.current;
-      if (logoContainer && window.innerWidth <= 768) {
-        // Remove CSS animation and use JavaScript-based scrolling
-        logoContainer.style.animation = 'none';
-        logoContainer.style.transform = 'translateX(0)';
-        
-        // Start JavaScript-based infinite scroll
-        animationId = startInfiniteScroll(logoContainer);
+    const container = containerRef.current;
+    if (!container) return;
+
+    let currentPosition = 0;
+    const speed = 0.5; // Slower speed for smoother animation
+    
+    const animate = () => {
+      if (!container) return;
+      
+      // Get fresh dimensions on each frame to handle responsive changes
+      const firstSet = container.children[0] as HTMLElement;
+      if (!firstSet) return;
+      
+      // Calculate the width of one complete set (first 10 logos)
+      const logoWidth = firstSet.offsetWidth;
+      const gap = 16; // gap-4 = 16px on mobile, gap-8 = 32px on desktop
+      const actualGap = window.innerWidth >= 640 ? 32 : 16;
+      const singleSetWidth = (logoWidth + actualGap) * 10; // 10 logos per set
+      
+      currentPosition -= speed;
+      
+      // Reset position when one complete set has scrolled
+      if (currentPosition <= -singleSetWidth) {
+        currentPosition = 0;
       }
+      
+      container.style.transform = `translateX(${currentPosition}px)`;
+      animationFrameId = requestAnimationFrame(animate);
     };
 
-    // JavaScript-based infinite scroll for mobile
-    const startInfiniteScroll = (container: HTMLElement) => {
-      let scrollPosition = 0;
-      const scrollSpeed = 0.8; // pixels per frame - slightly slower for smoothness
-      const singleSetWidth = container.scrollWidth / 3; // One-third because we have three sets
-      
-      const scroll = () => {
-        scrollPosition -= scrollSpeed;
-        
-        // Reset position when we've scrolled one set width
-        if (scrollPosition <= -singleSetWidth) {
-          scrollPosition = 0;
-        }
-        
-        container.style.transform = `translateX(${scrollPosition}px)`;
-        requestAnimationFrame(scroll);
-      };
-      
-      const animationId = requestAnimationFrame(scroll);
-      return animationId;
-    };
-
-    // Fix on mount and resize
-    fixLogoAnimation();
-    window.addEventListener('resize', fixLogoAnimation);
+    // Start animation immediately
+    setIsAnimating(true);
+    animate();
     
     return () => {
-      window.removeEventListener('resize', fixLogoAnimation);
-      if (animationId) {
-        cancelAnimationFrame(animationId);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
       }
+      setIsAnimating(false);
     };
   }, []);
 
@@ -82,8 +79,12 @@ export const LogoCarousel = () => {
         <div className="relative w-full overflow-hidden">
           <div 
             ref={containerRef}
-            className="flex gap-4 sm:gap-8 animate-scroll transform-gpu will-change-transform"
-            id="logo-scroll-container"
+            className="flex gap-4 sm:gap-8 logo-carousel-container"
+            style={{ 
+              animation: 'none',
+              transform: 'translateX(0)',
+              transition: 'none'
+            }}
           >
             {/* First set of images */}
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
@@ -123,24 +124,7 @@ export const LogoCarousel = () => {
               </motion.div>
             ))}
             
-            {/* Third set for extra smooth looping */}
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-              <motion.div
-                key={`third-${num}`}
-                className="flex-shrink-0 w-24 h-24 sm:w-40 sm:h-40 group relative"
-                whileHover={{ scale: 1.05, rotateY: 15 }}
-                transition={{ duration: 0.3 }}
-                viewport={{ once: true }}
-              >
-                <div className="relative overflow-hidden rounded-xl transition-all duration-300 w-full h-full">
-                  <img 
-                    src={`/klienti/${num}.png`}
-                    alt={`Klient ${num}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </motion.div>
-            ))}
+
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ import dynamic from 'next/dynamic';
 import { MovingBorder } from "@/components/ui/moving-border";
 import { ClientLogos } from "@/components/ui/client-logos";
 import { Quote } from "@/components/ui/quote";
-import { LogoCarousel } from "@/components/ui/logo-carousel";
+import LogoCarousel from "@/components/ui/logo-carousel";
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);

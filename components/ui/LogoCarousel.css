@@ -1,0 +1,75 @@
+/* components/ui/LogoCarousel.css */
+.logo-carousel-wrapper {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.logo-track {
+  display: flex;
+  width: max-content;
+  animation: scroll 25s linear infinite;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-100% / 2));
+  }
+}
+
+.logo-set {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4rem;
+  padding-right: 4rem;
+}
+
+.logo-item {
+  position: relative;
+  flex-shrink: 0;
+  width: 140px;
+  height: 140px;
+  transition: transform 0.3s ease;
+}
+
+.logo-item:hover {
+  transform: scale(1.1);
+}
+
+/* Responsive sizes */
+@media (max-width: 1024px) {
+  .logo-item { 
+    width: 120px; 
+    height: 120px; 
+  }
+  .logo-set { 
+    gap: 3rem; 
+    padding-right: 3rem; 
+  }
+}
+
+@media (max-width: 768px) {
+  .logo-set { 
+    gap: 2.5rem; 
+    padding-right: 2.5rem; 
+  }
+  .logo-item {
+    width: 95px;
+    height: 95px;
+  }
+}
+
+@media (max-width: 640px) {
+  .logo-set { 
+    gap: 2rem; 
+    padding-right: 2rem; 
+  }
+  .logo-item {
+    width: 80px;
+    height: 80px;
+  }
+}

@@ -5,6 +5,7 @@ import { BackgroundBeams } from "@/components/ui/background-beams";
 import { ModernCTAButton } from "@/components/ui/modern-cta-button";
 import Image from "next/image";
 import { ResultsGallery } from "@/components/ui/results-gallery";
+import LogoCarousel from "@/components/ui/logo-carousel"; // Import the fixed LogoCarousel
 
 const performanceImages = [
     "/HubHigh fotky/9.png",
@@ -136,79 +137,8 @@ export default function Vysledky() {
           </div>
         </section>
 
-        {/* Client Logos Section */}
-        <section className="relative py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center mb-16"
-            >
-              <h2 className="text-3xl sm:text-4xl font-semibold text-white mb-8">
-                Dôverujú nám
-              </h2>
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                viewport={{ once: true }}
-                className="text-lg text-gray-300 max-w-2xl mx-auto mb-12"
-              >
-                Firmy, ktorým sme pomohli dosiahnuť reálne výsledky
-              </motion.p>
-            </motion.div>
-            
-            {/* Testimonial Images Carousel */}
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="relative overflow-hidden max-w-6xl mx-auto"
-            >
-              <div className="flex gap-8 animate-scroll">
-                {/* First set of images */}
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                  <motion.div
-                    key={`first-${num}`}
-                    className="flex-shrink-0 w-40 h-40 group relative"
-                    whileHover={{ scale: 1.05, rotateY: 15 }}
-                    transition={{ duration: 0.3 }}
-                    viewport={{ once: true }}
-                  >
-                    <div className="relative overflow-hidden rounded-xl transition-all duration-300 w-full h-full">
-                      <img 
-                        src={`/klienti/${num}.png`}
-                        alt={`Klient ${num}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </motion.div>
-                ))}
-                {/* Duplicate set for seamless loop */}
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                  <motion.div
-                    key={`second-${num}`}
-                    className="flex-shrink-0 w-40 h-40 group relative"
-                    whileHover={{ scale: 1.05, rotateY: 15 }}
-                    transition={{ duration: 0.3 }}
-                    viewport={{ once: true }}
-                  >
-                    <div className="relative overflow-hidden rounded-xl transition-all duration-300 w-full h-full">
-                      <img 
-                        src={`/klienti/${num}.png`}
-                        alt={`Klient ${num}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </section>
+        {/* Client Logos Section - NOW FIXED */}
+        <LogoCarousel />
 
         {/* Results Sections */}
         <section className="relative py-20">

@@ -3,19 +3,15 @@
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 
-export const InfiniteMovingCards = ({
+export const ClientLogos = ({
   items,
   direction = "left",
-  speed = "normal",
-
-  
+  speed = "slow",
   pauseOnHover = true,
   className,
 }: {
   items: {
     image: string;
-    name: string;
-    alt: string;
   }[];
   direction?: "left" | "right";
   speed?: "fast" | "normal" | "slow";
@@ -28,7 +24,9 @@ export const InfiniteMovingCards = ({
   useEffect(() => {
     addAnimation();
   }, []);
+
   const [start, setStart] = useState(false);
+
   function addAnimation() {
     if (containerRef.current && scrollerRef.current) {
       const scrollerContent = Array.from(scrollerRef.current.children);
@@ -45,21 +43,23 @@ export const InfiniteMovingCards = ({
       setStart(true);
     }
   }
+
   const getDirection = () => {
     if (containerRef.current) {
       if (direction === "left") {
         containerRef.current.style.setProperty(
           "--animation-direction",
-          "forwards",
+          "forwards"
         );
       } else {
         containerRef.current.style.setProperty(
           "--animation-direction",
-          "reverse",
+          "reverse"
         );
       }
     }
   };
+
   const getSpeed = () => {
     if (containerRef.current) {
       if (speed === "fast") {
@@ -71,34 +71,37 @@ export const InfiniteMovingCards = ({
       }
     }
   };
+
   return (
     <div
       ref={containerRef}
       className={cn(
         "scroller relative z-20 max-w-7xl overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]",
-        className,
+        className
       )}
     >
       <ul
         ref={scrollerRef}
         className={cn(
-          "flex w-max min-w-full shrink-0 flex-nowrap gap-8 py-8",
+          "flex min-w-full shrink-0 gap-[var(--gap)] py-4 w-max flex-nowrap",
           start && "animate-scroll",
-          pauseOnHover && "hover:[animation-play-state:paused]",
+          pauseOnHover && "hover:[animation-play-state:paused]"
         )}
       >
         {items.map((item, idx) => (
           <li
-            className="relative w-[160px] h-[160px] max-w-full shrink-0 rounded-xl border border-white/10 bg-black/20 backdrop-blur-sm px-4 py-4 hover:border-white/30 hover:bg-white/10 transition-all duration-300 group"
-            key={item.name}
+            className="w-[160px] max-w-full relative rounded-2xl border border-b-0 flex-shrink-0 border-slate-700 px-8 py-6"
+            style={{
+              background:
+                "linear-gradient(180deg, var(--slate-800), var(--slate-900)",
+            }}
+            key={idx}
           >
-            <div className="relative w-full h-full flex items-center justify-center">
-              <img 
-                src={item.image}
-                alt={item.alt}
-                className="w-full h-full object-contain max-w-[120px] max-h-[120px] group-hover:scale-110 transition-transform duration-300"
-              />
-            </div>
+            <img
+              src={item.image}
+              alt="client logo"
+              className="w-full h-auto object-contain"
+            />
           </li>
         ))}
       </ul>

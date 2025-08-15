@@ -1,10 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { ModernCTAButton } from "@/components/ui/modern-cta-button";
 import Image from "next/image";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
+import Script from "next/script";
 
 const StrategyIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -127,6 +128,57 @@ export default function FreeKurz() {
   const [mounted, setMounted] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [initialAnimComplete, setInitialAnimComplete] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
+
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      console.log('Received message:', event.data); // Debug log
+      
+      // Detect LeadConnector form submission
+      if (Array.isArray(event.data) && event.data.length >= 3) {
+        // Check if it's the contact data submission format
+        if (event.data[0] === 'set-sticky-contacts' && event.data[1] === '_ud' && event.data[2]) {
+          try {
+            const contactData = JSON.parse(event.data[2]);
+            // Check if it contains our form source
+            if (contactData.source === 'free kurz' || contactData.location_id === 'zDKxFqDMaHidfQnQmEqk') {
+              console.log('Free kurz form submitted detected!', contactData);
+              setFormSubmitted(true);
+              // Redirect to welcome page instead of showing modal
+              window.location.href = '/welcome';
+              return;
+            }
+          } catch (e) {
+            // Ignore JSON parsing errors
+          }
+        }
+      }
+      
+      // Fallback: Handle other possible event formats
+      if (
+        (event.data.type === "form-submit" && event.data.formId === "uHuyLgW300lLAY5KLdhI") ||
+        (event.data.event === "form-submit" && event.data.formId === "uHuyLgW300lLAY5KLdhI") ||
+        event.data.formId === "uHuyLgW300lLAY5KLdhI" ||
+        (typeof event.data === 'string' && event.data.includes('form-submit')) ||
+        (typeof event.data === 'string' && event.data.includes('uHuyLgW300lLAY5KLdhI'))
+      ) {
+        console.log('Form submitted detected (fallback)!'); // Debug log
+        setFormSubmitted(true);
+        // Redirect to welcome page instead of showing modal
+        window.location.href = '/welcome';
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+
 
   useEffect(() => {
     setMounted(true);
@@ -156,12 +208,12 @@ export default function FreeKurz() {
         <section className="relative pt-28 pb-32">
           <div className="absolute inset-x-0 top-0 h-[70%] bg-gradient-to-b from-black via-black/80 via-60% to-transparent z-15"></div>
           
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-20 min-h-[18rem]">
             <motion.h1 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="text-5xl sm:text-6xl mt-15 lg:text-7xl font-bold mb-10 relative z-30 bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text text-transparent"
+                className="text-5xl sm:text-6xl mt-15 lg:text-7xl font-bold mb-10 bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text text-transparent"
               >
                 Nauč sa robiť výkonnostné reklamy od A po Z - úplne zadarmo.
               </motion.h1>
@@ -170,7 +222,7 @@ export default function FreeKurz() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl sm:text-2xl text-slate-300 max-w-5xl mx-auto mb-12 leading-relaxed relative z-30"
+                className="text-xl sm:text-2xl text-slate-300 max-w-5xl mx-auto mb-12 leading-relaxed"
               >
                 Tento kurz sme vytvorili pre podnikateľov, marketérov a tvorcov, ktorí chcú konečne pochopiť, ako funguje reklamný systém a ako z neho vyťažiť maximum. Ukážeme ti celý proces – od stratégie, cez prípravu videí až po nastavenie a optimalizáciu kampaní.
               </motion.p>
@@ -179,7 +231,6 @@ export default function FreeKurz() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="relative z-30"
             >
               <ModernCTAButton href="#kurz-form">
                 Získať prístup do kurzu
@@ -287,42 +338,51 @@ export default function FreeKurz() {
                       </div>
                     </div>
                     <h3 className="text-3xl sm:text-4xl font-semibold text-white mb-4">
-                      Získať prístup do kurzu
+                      {formSubmitted
+                        ? "Ďakujeme!"
+                        : "Získať prístup do kurzu"}
                     </h3>
                     <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                      Vyplňte formulár a získajte okamžitý prístup do kompletného kurzu výkonnostných reklám
+                      {formSubmitted
+                        ? "Všetky informácie sme ti poslali na email."
+                        : "Vyplňte formulár a získajte okamžitý prístup do kompletného kurzu výkonnostných reklám"}
                     </p>
                   </div>
                   
-                  {/* Enhanced LeadConnector Form */}
-                  <div className="w-full relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 rounded-2xl"></div>
-                    <div className="relative bg-black/20 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-                      <iframe
-                        src="https://api.leadconnectorhq.com/widget/form/uHuyLgW300lLAY5KLdhI"
-                        style={{
-                          width: '100%',
-                          height: 'min(820px, 85vh)',
-                          border: 'none',
-                          borderRadius: '12px',
-                          backgroundColor: 'transparent'
-                        }}
-                        id="inline-uHuyLgW300lLAY5KLdhI"
-                        data-layout="{'id':'INLINE'}"
-                        data-trigger-type="alwaysShow"
-                        data-trigger-value=""
-                        data-activation-type="alwaysActivated"
-                        data-activation-value=""
-                        data-deactivation-type="neverDeactivate"
-                        data-deactivation-value=""
-                        data-form-name="Form 0"
-                        data-height="820"
-                        data-layout-iframe-id="inline-uHuyLgW300lLAY5KLdhI"
-                        data-form-id="uHuyLgW300lLAY5KLdhI"
-                        title="Form 0"
-                      />
+                  {!formSubmitted ? (
+                    <div className="w-full relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 rounded-2xl"></div>
+                      <div className="relative bg-black/20 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                        <iframe
+                          src="https://api.leadconnectorhq.com/widget/form/uHuyLgW300lLAY5KLdhI"
+                          style={{
+                            width: "100%",
+                            height: "min(820px, 85vh)",
+                            border: "none",
+                            borderRadius: "12px",
+                            backgroundColor: "transparent",
+                          }}
+                          id="inline-uHuyLgW300lLAY5KLdhI"
+                          data-layout='{"id":"INLINE"}'
+                          data-trigger-type="alwaysShow"
+                          data-trigger-value=""
+                          data-activation-type="alwaysActivated"
+                          data-activation-value=""
+                          data-deactivation-type="neverDeactivate"
+                          data-deactivation-value=""
+                          data-form-name="Form 0"
+                          data-height="820"
+                          data-layout-iframe-id="inline-uHuyLgW300lLAY5KLdhI"
+                          data-form-id="uHuyLgW300lLAY5KLdhI"
+                          title="Form 0"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-center text-2xl text-white py-12">
+                      <p>Prístup do kurzu nájdeš vo svojej emailovej schránke.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -355,15 +415,9 @@ export default function FreeKurz() {
         </section>
       </main>
 
-      <BackgroundBeams className="z-0" />
       
-      <footer className="border-t border-slate-700 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center text-slate-400">
-            <p>&copy; 2025 HubHigh. Všetky práva vyhradené.</p>
-          </div>
-        </div>
-      </footer>
+
+      <BackgroundBeams className="z-0" />
     </div>
   );
 }

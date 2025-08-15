@@ -144,7 +144,7 @@ const WebDevVisual = () => {
                     viewport={{ once: true }}
                 >
                     <span className="text-neutral-600 mr-4 select-none">{i+1}</span>
-                    <span dangerouslySetInnerHTML={{ __html: line.replace(/<(\/?)([^>]+)>/g, '&lt;$1<span class="text-purple-400">$2</span>&gt;').replace(/className='([^']+)'/g, 'className=<span class="text-blue-400">\'$1\'</span>') }} />
+                    <span dangerouslySetInnerHTML={{ __html: line.replace(/<(\/?)(\w+)>/g, '&lt;$1<span class="text-purple-400">$2</span>&gt;').replace(/className='([^']+)'/g, 'className=<span class="text-blue-400">"$1"</span>') }} />
                 </motion.div>
             ))}
         </div>
@@ -397,14 +397,6 @@ export default function Sluzby() {
           </div>
         </section>
       </main>
-      
-      <footer className="border-t border-slate-700/30 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center text-slate-400">
-            <p>&copy; 2025 HubHigh. Všetky práva vyhradené.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

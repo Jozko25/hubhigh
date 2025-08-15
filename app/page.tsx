@@ -14,6 +14,23 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import dynamic from 'next/dynamic';
 import { MovingBorder } from "@/components/ui/moving-border";
+import { ClientLogos } from "@/components/ui/client-logos";
+import { Quote } from "@/components/ui/quote";
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  return isMobile;
+};
 
 const UseCaseCard = ({ result, index, disableEntryAnimation = false }: { result: any; index: number, disableEntryAnimation?: boolean }) => {
   const motionProps = disableEntryAnimation ? {} : {
@@ -592,7 +609,20 @@ export default function Home() {
   const { scrollY } = useScroll();
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const isMobile = useIsMobile();
   
+  useEffect(() => {
+    const scroller = document.querySelector(".scroller");
+    if (scroller) {
+      const scrollerContent = Array.from(scroller.children);
+      scrollerContent.forEach((item) => {
+        const duplicatedItem = item.cloneNode(true);
+        (duplicatedItem as HTMLElement).setAttribute("aria-hidden", "true");
+        scroller.appendChild(duplicatedItem);
+      });
+    }
+  }, []);
+
   const caseStudies = [
     {
       title: "Klinika ktorej sme zdvihli mesačné tržby o 180% a vygenerovali cez 600 kvalitných leadov za 3 mesiace",
@@ -790,12 +820,12 @@ hlavne fungujú.
             </div>
             
             <div className="relative w-full overflow-hidden">
-              <div className="flex gap-8 animate-scroll">
+              <div className="flex gap-4 sm:gap-8 animate-scroll">
                 {/* First set of images */}
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                   <motion.div
                     key={`first-${num}`}
-                    className="flex-shrink-0 w-40 h-40 group relative"
+                    className="flex-shrink-0 w-24 h-24 sm:w-40 sm:h-40 group relative"
                     whileHover={{ scale: 1.05, rotateY: 15 }}
                     transition={{ duration: 0.3 }}
                     viewport={{ once: true }}
@@ -813,7 +843,7 @@ hlavne fungujú.
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                   <motion.div
                     key={`second-${num}`}
-                    className="flex-shrink-0 w-40 h-40 group relative"
+                    className="flex-shrink-0 w-24 h-24 sm:w-40 sm:h-40 group relative"
                     whileHover={{ scale: 1.05, rotateY: 15 }}
                     transition={{ duration: 0.3 }}
                     viewport={{ once: true }}
@@ -832,43 +862,10 @@ hlavne fungujú.
           </div>
         </section>
 
-        <div className="overflow-x-hidden">
-          <motion.div 
-            className="relative py-12 app-image bg-black/[0.96] -mt-1"
-            initial={{ x: 400 }}
-            whileInView={{ x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            viewport={{ once: true }}
-            style={{
-              zIndex: useTransform(scrollY, [0, 800], [10, 100])
-            }}
-          >
-            {/* Black gradient from quote upward covering circle transition */}
-            <div className="absolute inset-x-0 top-0 h-[80%] bg-gradient-to-b from-black via-black/80 via-60% to-transparent z-[15]"></div>
-            
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-16">
-                <motion.blockquote 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8 }}
-                  viewport={{ once: true }}
-                  className="text-xl sm:text-2xl md:text-3xl font-medium text-white italic max-w-4xl mx-auto leading-relaxed relative z-20 backdrop-blur-md bg-black/10 p-6 sm:p-8 rounded-2xl"
-                  style={{
-                    textRendering: 'optimizeLegibility',
-                    WebkitFontSmoothing: 'antialiased',
-                    MozOsxFontSmoothing: 'grayscale',
-                    willChange: 'transform'
-                  }}
-                >
-                  <span className="text-5xl sm:text-6xl text-purple-400/30 absolute -top-6 -left-2 sm:-top-8 sm:-left-4">"</span>
-                  Sme realisti v digitálnom svete. Vieme, že vám záleží na reálnom raste a zisku nie len na tom, čo vyzerá dobre.
-                  <span className="text-5xl sm:text-6xl text-purple-400/30 absolute -bottom-6 -right-2 sm:-bottom-8 sm:-right-4">"</span>
-                </motion.blockquote>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+        <Quote 
+          text="Sme realisti v digitálnom svete. Vieme, že vám záleží na reálnom raste a zisku nie len na tom, čo vyzerá dobre."
+          containerClassName="-mt-1"
+        />
 
         <section id="vysledky" className="relative py-8 snap-start bg-black/[0.96] -mt-1">
           <div className="py-12 relative z-10">
@@ -991,9 +988,7 @@ hlavne fungujú.
               <ModernCTAButton href="/kontakt?modal=true">
                 Začnime s konzultáciou
               </ModernCTAButton>
-              <p className="text-neutral-400 text-xs sm:text-sm mt-4 px-4">
-                Bezplatne • Bez záväzkov • Odpoveď do 24h
-              </p>
+
             </motion.div>
           </div>
         </section>
@@ -1190,43 +1185,7 @@ hlavne fungujú.
       </main>
 
       <BackgroundBeams className="z-0" />
-      <footer className="border-t border-slate-200 dark:border-slate-700 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="font-semibold text-xl text-white mb-4">HubHigh</div>
-              <p className="text-neutral-400">Building the future of SaaS platforms with cutting-edge technology.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-4">Product</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">Enterprise</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-4">Company</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">Careers</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-4">Support</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="text-neutral-400 hover:text-white transition-colors">API Docs</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-slate-700 mt-8 pt-8 text-center text-neutral-400">
-            <p>&copy; 2025 HubHigh. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+    
     </div>
   );
 }
@@ -1241,7 +1200,13 @@ const MobileUseCaseCard = ({ study, index }: { study: any; index: number }) => {
       className="bg-neutral-900/50 border border-neutral-800 rounded-3xl overflow-hidden"
     >
       <div className="p-8">
-        <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight">{study.title}</h3>
+        <span className="inline-flex items-center gap-3 bg-black/50 border border-white/20 px-4 py-2 rounded-full text-sm font-semibold self-start mb-6">
+            <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
+            <span className="bg-gradient-to-b from-neutral-200 to-neutral-400 bg-clip-text text-transparent">
+              Prípadová štúdia #{index + 1}
+            </span>
+        </span>
+        <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight mt-4">{study.title}</h3>
         <p className="text-xl md:text-2xl text-neutral-300 mt-4 leading-relaxed">{study.description}</p>
       </div>
       <div className="bg-neutral-950/50 p-4">
@@ -1469,19 +1434,77 @@ const HorizontalTimeline = () => {
   const targetRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: targetRef,
-    offset: ["start end", "end end"],
+    offset: ["start start", "end end"],
   });
+  const isMobile = useIsMobile();
 
-  // Simpler stepped animation with more reasonable distances
-  // Each step moves exactly one card width to show the next card fully
+  // each step moves exactly one card width to show the next card fully
   const x = useTransform(
     scrollYProgress,
-    [0, 0.2, 1],
-    ["5%", "5%", `-${100 - (100 / timeline.length)}%`]
+    [0, 1],
+    ["5%", `-${100 - (100 / timeline.length)}%`]
   );
 
+  if (isMobile) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 my-12">
+        {timeline.map((item, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, rotateX: -90, y: 50, scale: 0.8 }}
+            whileInView={{ opacity: 1, rotateX: 0, y: 0, scale: 1 }}
+            transition={{ 
+              duration: 0.7, 
+              delay: index * 0.15, 
+              ease: [0.25, 0.46, 0.45, 0.94],
+              type: "spring",
+              stiffness: 120,
+              damping: 15
+            }}
+            viewport={{ once: true, amount: 0.3, margin: "-50px" }}
+            className="group relative transform-gpu"
+          >
+            {/* Subtle glow effect for mobile */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 0.2, scale: 1 }}
+              transition={{ duration: 0.7, delay: index * 0.15 + 0.1 }}
+              viewport={{ once: true }}
+              className="absolute -inset-1 bg-gradient-to-r from-purple-600/30 to-blue-500/30 rounded-2xl blur-md opacity-0 group-hover:opacity-40 transition duration-700 group-hover:duration-300"
+            ></motion.div>
+            
+            {/* Smaller, more compact glass card for mobile */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.2 + 0.1 }}
+              viewport={{ once: true }}
+              className="relative bg-black/60 backdrop-blur-xl border border-white/15 rounded-2xl p-6 h-full shadow-2xl"
+            >
+              <h3 
+                className="text-5xl font-bold bg-gradient-to-r from-purple-400/80 to-blue-400/80 bg-clip-text text-transparent mb-3 transition-all duration-500 group-hover:scale-110 [text-shadow:0_0_8px_rgba(192,132,252,0.2)] group-hover:[text-shadow:0_0_15px_rgba(192,132,252,0.4)]"
+              >
+                {item.year}
+              </h3>
+              <h4 
+                className="text-xl font-semibold text-neutral-100 mb-3"
+              >
+                {item.title}
+              </h4>
+              <p 
+                className="text-neutral-300 leading-relaxed text-sm"
+              >
+                {item.description}
+              </p>
+            </motion.div>
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div ref={targetRef} className="relative h-[110vh] overflow-x-hidden w-full">
+    <div ref={targetRef} className="relative h-[300vh] w-full">
       <div className="sticky top-24 h-[calc(100vh-12rem)] flex items-center overflow-hidden w-full">
         <motion.div
           style={{ x }}
@@ -1511,3 +1534,36 @@ const HorizontalTimeline = () => {
     </div>
   );
 };
+
+const clients = [
+  {
+    image: "/klienti/1.png",
+  },
+  {
+    image: "/klienti/2.png",
+  },
+  {
+    image: "/klienti/3.png",
+  },
+  {
+    image: "/klienti/4.png",
+  },
+  {
+    image: "/klienti/5.png",
+  },
+  {
+    image: "/klienti/6.png",
+  },
+  {
+    image: "/klienti/7.png",
+  },
+  {
+    image: "/klienti/8.png",
+  },
+  {
+    image: "/klienti/9.png",
+  },
+  {
+    image: "/klienti/10.png",
+  },
+];

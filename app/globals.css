@@ -35,11 +35,21 @@ html {
   max-width: 100%;
 }
 
-/* Mobile specific fixes - less aggressive */
+/* Mobile specific fixes - prevent horizontal scroll */
 @media (max-width: 768px) {
   body {
     overflow-x: hidden;
-    position: relative;
+    max-width: 100vw;
+  }
+  
+  html {
+    overflow-x: hidden;
+  }
+  
+  /* Ensure client logos section doesn't cause horizontal scroll */
+  .animate-scroll {
+    max-width: 100vw;
+    overflow: hidden;
   }
 }
 
@@ -57,15 +67,65 @@ html {
 }
 
 @keyframes scroll {
-  to {
-    transform: translate(calc(-50% - 0.5rem));
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50% - var(--gap, 2rem) / 2));
   }
 }
 
 .animate-scroll {
-  animation: scroll 30s linear infinite;
   --animation-duration: 30s;
   --animation-direction: normal;
+  animation: scroll var(--animation-duration) linear infinite;
+  animation-direction: var(--animation-direction);
+}
+
+/* Faster animation on mobile */
+@media (max-width: 768px) {
+  .animate-scroll {
+    --animation-duration: 6s;
+  }
+}
+
+/* Ultra-smooth scrolling optimizations */
+.horizontal-timeline {
+  contain: layout style paint;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  /* Force GPU compositing */
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  /* Optimize rendering */
+  image-rendering: optimizeSpeed;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+.horizontal-timeline > * {
+  /* Optimize child elements */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@media (max-width: 768px) {
+  .horizontal-timeline {
+    contain: strict;
+    will-change: transform;
+    /* Mobile-specific optimizations */
+    -webkit-overflow-scrolling: touch;
+    transform: translate3d(0, 0, 0);
+  }
+  
+  .horizontal-timeline > * {
+    /* Simplify child transforms on mobile */
+    transform: none;
+    backface-visibility: visible;
+  }
 }
 
 .bg-grid-white\/\[0\.02\] {

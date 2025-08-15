@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import Image from "next/image";
@@ -12,6 +12,7 @@ import {
   Step4Visual,
   Step5Visual,
 } from "@/components/ui/onboarding-visuals";
+
 
 interface FormData {
   name: string;
@@ -32,12 +33,17 @@ function KontaktContent() {
   const [scrollY, setScrollY] = useState(0);
   const [initialAnimComplete, setInitialAnimComplete] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<FormErrors>({});
   const [shake, setShake] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [calendlyLoaded, setCalendlyLoaded] = useState(false);
+  const [calendlyFailed, setCalendlyFailed] = useState(false);
+  const [calendlyStartedLoading, setCalendlyStartedLoading] = useState(false);
+  const [calendlyPreloaded, setCalendlyPreloaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     phone: '',
@@ -54,7 +60,7 @@ function KontaktContent() {
   }, []);
   */
 
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   const validateStep = (step: number) => {
     const newErrors: FormErrors = {};
@@ -99,6 +105,9 @@ function KontaktContent() {
         newErrors.openness = "Vyberte jednu z možností.";
         isValid = false;
       }
+    } else if (step === 6) {
+      // Calendly step - no validation needed
+      isValid = true;
     }
 
     setErrors(newErrors);
@@ -110,7 +119,11 @@ function KontaktContent() {
       if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
       } else {
-        handleSubmit();
+        // Step 6 is the final step - form completed
+        // Redirect to success page instead of showing modal
+        router.push('/success');
+        setFormSubmitted(true);
+        setShowOnboarding(false);
       }
     } else {
       setShake(true);
@@ -119,61 +132,38 @@ function KontaktContent() {
   };
 
   const handleSubmit = React.useCallback(async () => {
-    if (!validateStep(totalSteps)) {
+    setIsLoading(true);
+    setErrors({});
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Vyskytla sa chyba pri odosielaní.');
+      }
+
+      console.log('Form submitted successfully:', data);
+      setIsLoading(false);
+      return data; // Return success data
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        form: error instanceof Error ? error.message : 'Vyskytla sa chyba. Skúste to znova.' 
+      }));
       setShake(true);
       setTimeout(() => setShake(false), 500);
-      return;
+      setIsLoading(false);
+      throw error; // Re-throw to prevent form progression
     }
-
-    /*
-    if (!turnstileToken) {
-        setErrors(prev => ({ ...prev, form: "Prosím, overte, že nie ste robot." }));
-        setShake(true);
-        setTimeout(() => setShake(false), 500);
-        return;
-    }
-    */
-
-    try {
-      /*
-        const response = await fetch('/api/verify-turnstile', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token: turnstileToken }),
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-            setErrors(prev => ({ ...prev, form: "Overenie zlyhalo. Skúste to znova." }));
-            setShake(true);
-            setTimeout(() => setShake(false), 500);
-            return;
-        }
-      */
-
-        console.log('Form submitted:', formData);
-        // Handle form submission here
-        setShowOnboarding(false);
-        setShowSuccessMessage(true);
-        setFormSubmitted(true);
-        setCurrentStep(1);
-        setFormData({
-            name: '',
-            phone: '',
-            email: '',
-            website: '',
-            investment: '',
-            goals: '',
-            openness: ''
-        });
-    } catch (error) {
-        console.error('Error submitting form:', error);
-        setErrors(prev => ({ ...prev, form: "Vyskytla sa chyba. Skúste to znova." }));
-    }
-  }, [formData, turnstileToken]);
+  }, [formData]);
 
   const handleCloseModal = React.useCallback(() => {
     setShowOnboarding(false);
@@ -192,15 +182,11 @@ function KontaktContent() {
   }, [router]);
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && (showOnboarding || showSuccessMessage)) {
-      if (showOnboarding) {
-        handleCloseModal();
-      } else {
-        setShowSuccessMessage(false);
-      }
+    if (event.key === 'Escape' && showOnboarding) {
+      handleCloseModal();
     }
     
-    if (event.key === 'Enter' && showOnboarding && !showSuccessMessage) {
+    if (event.key === 'Enter' && showOnboarding) {
       event.preventDefault();
       if (currentStep < totalSteps) {
         handleNextStep();
@@ -227,6 +213,245 @@ function KontaktContent() {
     }
   }, [searchParams]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showOnboarding) {
+      // Store original overflow style
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      
+      // Lock scroll
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      
+      // Cleanup function to restore scroll
+      return () => {
+        document.body.style.overflow = originalStyle;
+        document.documentElement.style.overflow = originalStyle;
+      };
+    }
+  }, [showOnboarding]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (
+        event.data.event &&
+        event.data.event === "calendly.event_scheduled"
+      ) {
+        setShowOnboarding(false);
+        // Redirect to success page instead of showing modal
+        router.push('/success');
+        setFormSubmitted(true);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  // Smart preloading - start loading resources at step 4
+  useEffect(() => {
+    if (currentStep >= 4 && !calendlyPreloaded) {
+      const preloadCalendly = async () => {
+        try {
+          console.log('🚀 Preloading Calendly resources...');
+
+          // Preload stylesheet with high priority
+          const stylesheetPromise = new Promise<void>((resolve, reject) => {
+            const existingStylesheet = document.querySelector('link[href="https://assets.calendly.com/assets/external/widget.css"]');
+            if (existingStylesheet) {
+              resolve();
+              return;
+            }
+
+            const stylesheet = document.createElement('link');
+            stylesheet.rel = 'preload';
+            stylesheet.as = 'style';
+            stylesheet.href = 'https://assets.calendly.com/assets/external/widget.css';
+            stylesheet.crossOrigin = 'anonymous';
+            stylesheet.onload = () => {
+              // Convert to actual stylesheet
+              stylesheet.rel = 'stylesheet';
+              resolve();
+            };
+            stylesheet.onerror = () => reject(new Error('Failed to preload Calendly CSS'));
+            document.head.appendChild(stylesheet);
+          });
+
+          // Preload script
+          const scriptPromise = new Promise<void>((resolve, reject) => {
+            const existingScript = document.querySelector('script[src="https://assets.calendly.com/assets/external/widget.js"]');
+            if (existingScript) {
+              resolve();
+              return;
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://assets.calendly.com/assets/external/widget.js';
+            script.async = true;
+            script.onload = () => {
+              // Wait for Calendly object to be available
+              const checkCalendly = () => {
+                if (window.Calendly) {
+                  console.log('✅ Calendly preloaded successfully');
+                  resolve();
+                } else {
+                  setTimeout(checkCalendly, 50);
+                }
+              };
+              checkCalendly();
+            };
+            script.onerror = () => reject(new Error('Failed to preload Calendly script'));
+            document.head.appendChild(script);
+          });
+
+          await Promise.all([stylesheetPromise, scriptPromise]);
+          setCalendlyPreloaded(true);
+
+        } catch (error) {
+          console.warn('Calendly preloading failed:', error);
+          // Don't set failed state yet, we'll try again on step 6
+        }
+      };
+
+      preloadCalendly();
+    }
+  }, [currentStep, calendlyPreloaded]);
+
+  // Initialize Calendly widget when reaching step 6 (resources should already be loaded)
+  useEffect(() => {
+    if (currentStep === 6) {
+      let isMounted = true;
+      let fallbackTimer: NodeJS.Timeout;
+      let initTimer: NodeJS.Timeout;
+
+      const initializeCalendly = async () => {
+        try {
+          setCalendlyFailed(false);
+          setCalendlyStartedLoading(true);
+
+          // If preloaded successfully, initialize immediately
+          if (calendlyPreloaded && window.Calendly) {
+            console.log('✅ Using preloaded Calendly');
+            
+            // Wait for DOM to be ready with container
+            const waitForContainer = () => {
+              const container = document.querySelector('.calendly-inline-widget');
+              if (container && isMounted && window.Calendly) {
+                try {
+                  window.Calendly.initInlineWidget({
+                    url: 'https://calendly.com/meet-launch/online-meeting?primary_color=331bd2&hide_gdpr_banner=1',
+                    parentElement: container as HTMLElement
+                  });
+                  setCalendlyLoaded(true);
+                } catch (initError) {
+                  console.warn('Calendly widget initialization failed:', initError);
+                  setCalendlyFailed(true);
+                }
+              } else if (isMounted) {
+                // Try again in next frame
+                requestAnimationFrame(waitForContainer);
+              }
+            };
+            
+            initTimer = setTimeout(waitForContainer, 50);
+            return;
+          }
+
+          // Fallback: load resources now if preloading failed
+          console.log('⚠️ Preloading failed, loading Calendly now...');
+          
+          // Load stylesheet
+          const stylesheetPromise = new Promise<void>((resolve, reject) => {
+            const existingStylesheet = document.querySelector('link[href="https://assets.calendly.com/assets/external/widget.css"]');
+            if (existingStylesheet) {
+              resolve();
+              return;
+            }
+
+            const stylesheet = document.createElement('link');
+            stylesheet.rel = 'stylesheet';
+            stylesheet.href = 'https://assets.calendly.com/assets/external/widget.css';
+            stylesheet.onload = () => resolve();
+            stylesheet.onerror = () => reject(new Error('Failed to load Calendly CSS'));
+            document.head.appendChild(stylesheet);
+          });
+
+          // Load script
+          const scriptPromise = new Promise<void>((resolve, reject) => {
+            const existingScript = document.querySelector('script[src="https://assets.calendly.com/assets/external/widget.js"]');
+            if (existingScript && window.Calendly) {
+              resolve();
+              return;
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://assets.calendly.com/assets/external/widget.js';
+            script.async = true;
+            script.onload = () => {
+              const checkCalendly = () => {
+                if (window.Calendly) {
+                  resolve();
+                } else {
+                  setTimeout(checkCalendly, 50);
+                }
+              };
+              checkCalendly();
+            };
+            script.onerror = () => reject(new Error('Failed to load Calendly script'));
+            document.head.appendChild(script);
+          });
+          
+          await Promise.all([stylesheetPromise, scriptPromise]);
+          
+          const waitForContainerFallback = () => {
+            const container = document.querySelector('.calendly-inline-widget');
+            if (container && isMounted && window.Calendly) {
+              try {
+                window.Calendly.initInlineWidget({
+                  url: 'https://calendly.com/meet-launch/online-meeting?primary_color=331bd2&hide_gdpr_banner=1',
+                  parentElement: container as HTMLElement
+                });
+                setCalendlyLoaded(true);
+              } catch (initError) {
+                console.warn('Calendly widget initialization failed:', initError);
+                setCalendlyFailed(true);
+              }
+            } else if (isMounted) {
+              requestAnimationFrame(waitForContainerFallback);
+            }
+          };
+          
+          initTimer = setTimeout(waitForContainerFallback, 300);
+
+        } catch (error) {
+          console.warn('Calendly initialization failed, using iframe fallback:', error);
+          if (isMounted) {
+            setCalendlyFailed(true);
+          }
+        }
+      };
+
+      initializeCalendly();
+
+      // Reduced timeout since resources should be preloaded
+      fallbackTimer = setTimeout(() => {
+        if (isMounted && !calendlyLoaded) {
+          console.warn('Calendly timeout, switching to iframe');
+          setCalendlyFailed(true);
+        }
+      }, 5000);
+
+      return () => {
+        isMounted = false;
+        clearTimeout(fallbackTimer);
+        clearTimeout(initTimer);
+      };
+    }
+  }, [currentStep, calendlyLoaded, calendlyPreloaded]);
+
   useEffect(() => {
     setMounted(true);
     
@@ -247,11 +472,11 @@ function KontaktContent() {
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [mounted, showOnboarding, showSuccessMessage, currentStep, totalSteps, handleSubmit]);
+  }, [mounted, showOnboarding, currentStep, totalSteps, handleSubmit]);
 
   // Focus first input when modal opens or step changes
   useEffect(() => {
-    if (showOnboarding && !showSuccessMessage) {
+    if (showOnboarding) {
       const timer = setTimeout(() => {
         const firstInput = document.querySelector('.modal-step input, .modal-step textarea') as HTMLElement;
         if (firstInput) {
@@ -260,7 +485,7 @@ function KontaktContent() {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [showOnboarding, currentStep, showSuccessMessage]);
+  }, [showOnboarding, currentStep]);
 
   const scrollRotation = scrollY * 0.110810;
 
@@ -293,12 +518,12 @@ function KontaktContent() {
           {/* Black gradient from top covering text and half circle */}
           <div className="absolute inset-x-0 top-0 h-[70%] bg-gradient-to-b from-black via-black/80 via-60% to-transparent z-[15]"></div>
           
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-20 min-h-[18rem]">
             <motion.h1 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="text-5xl sm:text-6xl mt-15 lg:text-7xl font-bold mb-10 relative z-30 bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text text-transparent"
+                className="text-5xl sm:text-6xl mt-15 lg:text-7xl font-bold mb-10 bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text text-transparent"
               >
                 Zisti, ako môže tvoja firma rásť rýchlejšie
               </motion.h1>
@@ -309,16 +534,7 @@ function KontaktContent() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-xl sm:text-2xl text-slate-300 max-w-5xl mx-auto mb-8 leading-relaxed relative z-30"
               >
-                vďaka 15-minútovému nezáväznému hovoru
-              </motion.p>
-              
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="text-lg sm:text-xl text-slate-400 max-w-5xl mx-auto mb-12 leading-relaxed relative z-30"
-              >
-                Tento hovor je nezáväzný. Prejdeme si tvoju aktuálnu situáciu, ciele a potenciál, ktorý možno nevyužívaš.
+                Vyplňte dotazník, aby sme lepšie porozumeli vašim cieľom, a následne si zarezervujte nezáväzný hovor, ktorý bude trvať približne 15 minút. Počas neho si prejdeme vašu aktuálnu situáciu, ciele a potenciál.
               </motion.p>
 
               {/* Beautiful CTA Trigger */}
@@ -411,16 +627,16 @@ function KontaktContent() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.8 }}
-                    className="mt-6 text-sm text-gray-400 relative z-30"
+                    className="mt-6 text-sm text-gray-400 relative z-20"
                   >
-                    {formSubmitted ? 'Formulár bol úspešne odoslaný' : 'Iba 5 minút • Bez záväzkov • Okamžitá odpoveď'}
+                    {formSubmitted ? 'Formulár bol úspešne odoslaný' : 'Bez záväzkov • Okamžitá odpoveď'}
                   </motion.p>
                 </motion.div>
               )}
           </div>
           
           {/* Circle framing the CTA */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-[55%] -translate-y-1/2 w-[55rem] h-[55rem] pointer-events-none z-10 overflow-hidden">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[50%] sm:top-[55%] -translate-y-1/2 w-[55rem] h-[55rem] pointer-events-none z-10 overflow-hidden">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ 
@@ -487,11 +703,15 @@ function KontaktContent() {
                   duration: 0.12,
                   ease: "easeOut"
                 }}
-                className="w-full max-w-4xl bg-neutral-900/60 backdrop-blur-xl border border-neutral-700/50 rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-900/30 relative mx-2 sm:mx-0 overflow-hidden"
-                style={{ pointerEvents: 'auto' }}
+                className={`w-full ${currentStep === 6 ? 'max-w-5xl' : 'max-w-4xl'} bg-neutral-900/60 backdrop-blur-xl border border-neutral-700/50 rounded-2xl sm:rounded-3xl shadow-2xl shadow-purple-900/30 relative mx-2 sm:mx-0 overflow-hidden flex flex-col`}
+                style={{ 
+                  pointerEvents: 'auto',
+                  minHeight: currentStep === 6 ? '700px' : '600px',
+                  maxHeight: '85vh'
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="grid md:grid-cols-2 min-h-[600px]">
+              <div className={`grid ${currentStep === 6 ? 'md:grid-cols-1' : 'md:grid-cols-2'} ${currentStep === 6 ? 'min-h-[650px]' : 'min-h-[600px]'}`}>
                   {/* Left side: Form */}
                   <div className="p-8 flex flex-col">
                     {/* Progress bar */}
@@ -797,6 +1017,107 @@ function KontaktContent() {
                             {errors.form && <p className="text-red-500 text-xs mt-2 text-center">{errors.form}</p>}
                           </motion.div>
                         )}
+
+                        {/* Step 6: Calendly */}
+                        {currentStep === 6 && (
+                          <motion.div
+                            key="step6"
+                            initial={{ opacity: 0, x: 5 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -5 }}
+                            transition={{ duration: 0.1, ease: "easeOut" }}
+                            className="space-y-6 h-full flex flex-col"
+                          >
+                            <div className="text-center mb-8">
+                              <h3 className="text-2xl font-bold text-white mb-2">
+                                Zarezervujte si čas
+                              </h3>
+                              <p className="text-md text-gray-400">
+                                Vyberte si termín, ktorý vám vyhovuje
+                              </p>
+                            </div>
+                            <div className="flex-grow relative" style={{ overflow: 'unset' }}>
+                              {/* Loading state with improved messaging */}
+                              {calendlyStartedLoading && !calendlyLoaded && !calendlyFailed && (
+                                <div className="flex flex-col items-center justify-center h-96">
+                                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
+                                  <p className="text-gray-400 text-center">
+                                    Načítavam rezervačný systém...
+                                    <br />
+                                    <span className="text-sm text-gray-500 mt-2 block">Prosím počkajte, pripravujeme kalendár</span>
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Initial loading state */}
+                              {!calendlyStartedLoading && !calendlyFailed && (
+                                <div className="flex flex-col items-center justify-center h-96">
+                                  <div className="animate-pulse">
+                                    <div className="h-12 w-12 bg-purple-500/20 rounded-full mb-4"></div>
+                                  </div>
+                                  <p className="text-gray-400 text-center">
+                                    Inicializujem rezervačný systém...
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Calendly widget container */}
+                              {!calendlyFailed && (
+                                <div 
+                                  className={`calendly-inline-widget ${!calendlyLoaded ? 'opacity-0 absolute inset-0' : 'opacity-100'} transition-opacity duration-700`}
+                                  style={{
+                                    minWidth: "320px", 
+                                    height: "600px",
+                                    maxHeight: "600px",
+                                    overflow: "hidden"
+                                  }}
+                                ></div>
+                              )}
+
+                              {/* Iframe fallback with better error handling */}
+                              {calendlyFailed && (
+                                <div className="w-full space-y-4">
+                                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
+                                    <p className="text-yellow-400 text-sm text-center">
+                                      💡 Používam záložné riešenie pre lepšiu kompatibilitu
+                                    </p>
+                                  </div>
+                                  <iframe
+                                    src="https://calendly.com/meet-launch/online-meeting?primary_color=331bd2&hide_gdpr_banner=1&embed_domain=hubhigh.com&embed_type=Inline"
+                                    width="100%"
+                                    height="600px"
+                                    frameBorder="0"
+                                    title="Rezervácia termínu"
+                                    className="rounded-lg border-0"
+                                    allow="microphone; camera"
+                                    onLoad={() => {
+                                      // Hide the loading state once iframe loads
+                                      setCalendlyLoaded(true);
+                                    }}
+                                    onError={() => {
+                                      console.error('Iframe fallback also failed');
+                                    }}
+                                  ></iframe>
+                                  {/* Enhanced fallback link */}
+                                  <div className="text-center mt-4 space-y-2">
+                                    <p className="text-gray-400 text-sm">Problémy s načítaním?</p>
+                                    <a 
+                                      href="https://calendly.com/meet-launch/online-meeting" 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 underline text-sm font-medium transition-colors"
+                                    >
+                                      <span>Otvoriť v novom okne</span>
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                      </svg>
+                                    </a>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
                       </AnimatePresence>
                     </div>
                     
@@ -819,7 +1140,7 @@ function KontaktContent() {
                         Späť
                       </button>
 
-                      {currentStep < totalSteps ? (
+                      {currentStep < 5 ? (
                         <button
                           type="button"
                           onClick={handleNextStep}
@@ -827,18 +1148,46 @@ function KontaktContent() {
                         >
                           Ďalej
                         </button>
+                      ) : currentStep === 5 ? (
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={async () => {
+                            if (isLoading) return;
+                            try {
+                              await handleSubmit();
+                              handleNextStep();
+                            } catch (error) {
+                              // Error is already handled in handleSubmit
+                            }
+                          }}
+                          className={`flex items-center justify-center px-8 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/20 hover:scale-105 active:scale-95 text-sm sm:text-base ${shake ? 'animate-shake' : ''} ${isLoading ? 'cursor-not-allowed opacity-70' : ''}`}
+                        >
+                          {isLoading ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Odosielam...
+                            </>
+                          ) : (
+                            'Poslať'
+                          )}
+                        </button>
                       ) : (
                         <button
                           type="button"
-                          onClick={handleSubmit}
+                          onClick={handleNextStep}
                           className={`px-8 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/20 hover:scale-105 active:scale-95 text-sm sm:text-base ${shake ? 'animate-shake' : ''}`}
                         >
-                          Odoslať
+                          Dokončiť
                         </button>
                       )}
                     </div>
                   </div>
                   {/* Right side: Image Gallery */}
+                  {currentStep !== 6 && (
                   <div className="hidden md:block relative p-2">
                     <AnimatePresence>
                       <motion.div
@@ -854,6 +1203,7 @@ function KontaktContent() {
                         {currentStep === 3 && <Step3Visual />}
                         {currentStep === 4 && <Step4Visual />}
                         {currentStep === 5 && <Step5Visual />}
+                        {currentStep === 6 && <Step5Visual />}
                       </motion.div>
                     </AnimatePresence>
                      {/* Close button */}
@@ -866,147 +1216,16 @@ function KontaktContent() {
                         </svg>
                       </button>
                   </div>
+                  )}
                 </div>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Success Message Modal */}
-        <AnimatePresence>
-          {showSuccessMessage && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              className="fixed inset-0 bg-black/85 backdrop-blur-xl z-50 flex items-center justify-center p-2 sm:p-4"
-              onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                  setShowSuccessMessage(false);
-                }
-              }}
-            >
-              <motion.div
-                initial={{ scale: 0.96, opacity: 0, y: 8 }}
-                animate={{ 
-                  scale: 1, 
-                  opacity: 1, 
-                  y: 0
-                }}
-                exit={{ 
-                  scale: 0.96, 
-                  opacity: 0, 
-                  y: 8
-                }}
-                transition={{ 
-                  duration: 0.2,
-                  ease: [0.25, 0.46, 0.45, 0.94]
-                }}
-                className="w-full max-w-2xl bg-neutral-900/80 backdrop-blur-xl border border-green-500/30 rounded-2xl sm:rounded-3xl shadow-2xl shadow-green-900/30 relative mx-2 sm:mx-0"
-                style={{ pointerEvents: 'auto' }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Close button */}
-                <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
-                  <button
-                    onClick={() => setShowSuccessMessage(false)}
-                    className="w-8 h-8 bg-neutral-800/50 hover:bg-red-500/20 hover:border-red-500/40 border border-neutral-700/80 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer group"
-                  >
-                    <svg className="w-4 h-4 text-white group-hover:text-red-400 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="p-6 sm:p-12 text-center">
-                  {/* Success Icon */}
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ 
-                      delay: 0.1,
-                      type: "spring",
-                      stiffness: 200,
-                      damping: 15
-                    }}
-                    className="w-16 sm:w-20 h-16 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30"
-                  >
-                    <svg className="w-8 sm:w-10 h-8 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </motion.div>
-
-                  {/* Success Title */}
-                  <motion.h2
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.4 }}
-                    className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4"
-                  >
-                    Termín je potvrdený. Tešíme sa na spoločný hovor!
-                  </motion.h2>
-
-                  {/* Success Subtitle */}
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.4 }}
-                    className="text-base sm:text-lg text-gray-300 mb-6 sm:mb-8"
-                  >
-                    Ďakujeme, že ste si vybrali čas na konzultáciu – máme to v kalendári.
-                  </motion.p>
-
-                  {/* Instructions */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.4 }}
-                    className="text-left bg-black/30 border border-white/10 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8"
-                  >
-                    <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Nezabudnite:</h3>
-                    <ul className="space-y-2 sm:space-y-3 text-gray-300 text-sm sm:text-base">
-                      <li className="flex items-start">
-                        <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                        <span>Termín aj link hovoru nájdete v emaili (pridajte si to do svojho kalendára)</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                        <span>Pripojte sa ideálne z počítača s web kamerou</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                        <span>Ak niečo zmení vašu dostupnosť, dajte nám vedieť vopred</span>
-                      </li>
-                    </ul>
-                  </motion.div>
-
-                  {/* Close Button */}
-                  <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.4 }}
-                    onClick={() => setShowSuccessMessage(false)}
-                    className="px-8 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/20 hover:scale-105 active:scale-95 text-sm sm:text-base"
-                  >
-                    Rozumiem
-                  </motion.button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </main>
 
       <BackgroundBeams className="z-0" />
-      
-      <footer className="relative z-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center text-slate-400">
-            <p>&copy; 2025 HubHigh. Všetky práva vyhradené.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

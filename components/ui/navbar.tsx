@@ -38,7 +38,7 @@ export const Navbar = ({ className }: NavbarProps) => {
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative flex items-center justify-between h-20 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl px-6 mt-4 shadow-lg shadow-purple-900/30">
+          <div className="relative flex items-center justify-between h-16 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl px-6 mt-4 shadow-lg shadow-purple-900/30">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
@@ -77,7 +77,7 @@ export const Navbar = ({ className }: NavbarProps) => {
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 <Link href="/kontakt?modal=true">
-                  <button className="bg-gradient-to-r from-purple-600 cursor-pointer to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25">
+                  <button className="bg-gradient-to-r from-purple-600 cursor-pointer to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-3 rounded-full text-base font-bold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25">
                     Konzultácia
                   </button>
                 </Link>
@@ -109,9 +109,9 @@ export const Navbar = ({ className }: NavbarProps) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: "-100%" }}
             transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed inset-x-0 top-0 z-40 md:hidden bg-black/95 backdrop-blur-md"
+            className="fixed inset-x-0 top-0 z-40 md:hidden bg-gradient-to-b from-black via-black/95 to-black/90 backdrop-blur-md"
           >
-            <div className="px-4 pt-24 pb-8 space-y-4">
+            <div className="px-4 pt-24 pb-8 space-y-6">
               {navItems.map((item, index) => (
                 <motion.div
                   key={item.name}
@@ -122,7 +122,7 @@ export const Navbar = ({ className }: NavbarProps) => {
                   <Link
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-gray-200 hover:text-white block px-3 py-3 rounded-md text-base font-bold w-full text-center transition-colors duration-200 bg-white/5 hover:bg-white/10"
+                    className="block w-full rounded-xl border border-neutral-800 bg-transparent p-4 text-center text-lg font-semibold text-neutral-200 transition-all duration-300 hover:border-purple-500/60 hover:bg-purple-500/10 hover:text-purple-100"
                   >
                     {item.name}
                   </Link>
@@ -137,7 +137,7 @@ export const Navbar = ({ className }: NavbarProps) => {
                 <Link href="/kontakt?modal=true">
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-full text-base font-semibold transition-all duration-200 w-full shadow-lg"
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-5 rounded-full text-xl font-bold transition-all duration-200 w-full shadow-lg"
                   >
                     Konzultácia
                   </button>

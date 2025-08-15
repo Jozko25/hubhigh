@@ -7,29 +7,27 @@ import Image from "next/image";
 import { ResultsGallery } from "@/components/ui/results-gallery";
 
 const performanceImages = [
-  "/HubHigh fotky/1.JPG",
-  "/HubHigh fotky/2.JPG",
-  "/HubHigh fotky/3.JPG",
-  "/HubHigh fotky/4.JPG",
-  "/HubHigh fotky/5.JPG",
-  "/HubHigh fotky/6.JPG",
-  "/HubHigh fotky/18.png",
-  "/HubHigh fotky/19.png",
-  "/HubHigh fotky/20.png",
-  "/HubHigh fotky/21.png",
+    "/HubHigh fotky/9.png",
+    "/HubHigh fotky/18.png",
+    "/HubHigh fotky/19.png",
+    "/HubHigh fotky/20.png",
+    "/HubHigh fotky/21.png",
+    "/HubHigh fotky/22.png",
+    "/HubHigh fotky/23.png",
+    "/HubHigh fotky/24.png",
 ];
 
 const organicImages = [
-  "/HubHigh fotky/7.JPG",
-  "/HubHigh fotky/8.JPG",
-  "/HubHigh fotky/9.png",
-  "/HubHigh fotky/10.jpg",
-  "/HubHigh fotky/11.jpg",
-  "/HubHigh fotky/12.jpg",
-  "/HubHigh fotky/13.jpg",
-  "/HubHigh fotky/22.png",
-  "/HubHigh fotky/23.png",
-  "/HubHigh fotky/24.png",
+    "/HubHigh fotky/1.JPG",
+    "/HubHigh fotky/2.JPG",
+    "/HubHigh fotky/3.JPG",
+    "/HubHigh fotky/4.JPG",
+    "/HubHigh fotky/5.JPG",
+    "/HubHigh fotky/6.JPG",
+    "/HubHigh fotky/7.JPG",
+    "/HubHigh fotky/8.JPG",
+    "/HubHigh fotky/13.jpg",
+
 ];
 
 export default function Vysledky() {
@@ -66,12 +64,12 @@ export default function Vysledky() {
           {/* Black gradient from top covering text and half circle */}
           <div className="absolute inset-x-0 top-0 h-[70%] bg-gradient-to-b from-black via-black/80 via-60% to-transparent z-[15]"></div>
           
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-20">
             <motion.h1 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="text-5xl sm:text-6xl mt-15 lg:text-7xl font-bold mb-10 relative z-30"
+                className="text-5xl sm:text-6xl mt-15 lg:text-7xl font-bold mb-10"
               >
                 Nechajme výsledky{" "}
                 <span className="bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text text-transparent">
@@ -83,7 +81,7 @@ export default function Vysledky() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl sm:text-2xl text-slate-300 max-w-4xl mx-auto mb-24 leading-relaxed relative z-30"
+                className="text-xl sm:text-2xl text-slate-300 max-w-4xl mx-auto mb-24 leading-relaxed"
               >
                 Na tejto stránke nenájdete sľuby, len konkrétne čísla, ktoré hovoria za nás.
                 Ukazujeme, ako vyzerá rast, keď sa spojí stratégia, kvalitný obsah a dôvera medzi nami a klientom.
@@ -93,7 +91,7 @@ export default function Vysledky() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="relative z-[40] mt-24"
+              className="mt-24"
             >
               <ModernCTAButton href="/kontakt?modal=true">
                 Začnime s konzultáciou
@@ -102,7 +100,7 @@ export default function Vysledky() {
           </div>
           
           {/* Circle framing the CTA */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-[55%] -translate-y-1/2 w-[55rem] h-[55rem] pointer-events-none z-10 overflow-hidden">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[50%] sm:top-[55%] -translate-y-1/2 w-[55rem] h-[55rem] pointer-events-none z-10 overflow-hidden">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ 
@@ -216,14 +214,14 @@ export default function Vysledky() {
         <section className="relative py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
             <ResultsGallery 
-              title="📊 Výkonnostné reklamy"
-              description="Konkrétne výsledky z platených kampaní na Meta platformách"
-              images={performanceImages}
-            />
-            <ResultsGallery 
-              title="🌱 Organický rast"
+              title="Organický rast"
               description="Výsledky z organických aktivít na sociálnych sieťach"
               images={organicImages}
+            />
+            <ResultsGallery 
+              title="Reklamy"
+              description="Konkrétne výsledky z platených kampaní na Meta platformách"
+              images={performanceImages}
             />
           </div>
         </section>
@@ -252,14 +250,6 @@ export default function Vysledky() {
       </main>
 
       <BackgroundBeams className="z-0" />
-      
-      <footer className="border-t border-slate-700 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center text-slate-400">
-            <p>&copy; 2025 HubHigh. Všetky práva vyhradené.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

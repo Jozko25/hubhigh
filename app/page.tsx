@@ -32,6 +32,27 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+// Hook to fix logo animation on mobile
+const useLogoAnimationFix = () => {
+  useEffect(() => {
+    const fixLogoAnimation = () => {
+      const logoContainer = document.getElementById('logo-scroll-container');
+      if (logoContainer && window.innerWidth <= 768) {
+        // Reset animation on mobile to prevent spinning
+        logoContainer.style.animation = 'none';
+        logoContainer.offsetHeight; // Trigger reflow
+        logoContainer.style.animation = 'scroll-mobile-smooth 15s linear infinite';
+      }
+    };
+
+    // Fix on mount and resize
+    fixLogoAnimation();
+    window.addEventListener('resize', fixLogoAnimation);
+    
+    return () => window.removeEventListener('resize', fixLogoAnimation);
+  }, []);
+};
+
 const UseCaseCard = ({ result, index, disableEntryAnimation = false }: { result: any; index: number, disableEntryAnimation?: boolean }) => {
   const motionProps = disableEntryAnimation ? {} : {
     initial: { opacity: 0, y: 50 },
@@ -610,6 +631,7 @@ export default function Home() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const isMobile = useIsMobile();
+  useLogoAnimationFix(); // Fix logo animation on mobile
   
   useEffect(() => {
     const scroller = document.querySelector(".scroller");
@@ -820,7 +842,10 @@ hlavne fungujú.
             </div>
             
             <div className="relative w-full overflow-hidden">
-              <div className="flex gap-4 sm:gap-8 animate-scroll">
+              <div 
+                className="flex gap-4 sm:gap-8 animate-scroll transform-gpu will-change-transform"
+                id="logo-scroll-container"
+              >
                 {/* First set of images */}
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                   <motion.div

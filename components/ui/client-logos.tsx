@@ -23,6 +23,14 @@ export const ClientLogos = ({
 
   useEffect(() => {
     addAnimation();
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      if (scrollerRef.current) {
+        const existingDuplicates = scrollerRef.current.querySelectorAll('[data-duplicate="true"]');
+        existingDuplicates.forEach(dup => dup.remove());
+      }
+    };
   }, []);
 
   const [start, setStart] = useState(false);
@@ -31,10 +39,18 @@ export const ClientLogos = ({
     if (containerRef.current && scrollerRef.current) {
       const scrollerContent = Array.from(scrollerRef.current.children);
 
+      // Clear any existing duplicates first
+      const existingDuplicates = scrollerRef.current.querySelectorAll('[data-duplicate="true"]');
+      existingDuplicates.forEach(dup => dup.remove());
+
+      // Add duplicates with proper data attributes
       scrollerContent.forEach((item) => {
-        const duplicatedItem = item.cloneNode(true);
-        if (scrollerRef.current) {
-          scrollerRef.current.appendChild(duplicatedItem);
+        const duplicatedItem = item.cloneNode(true) as HTMLElement;
+        if (duplicatedItem) {
+          duplicatedItem.setAttribute('data-duplicate', 'true');
+          if (scrollerRef.current) {
+            scrollerRef.current.appendChild(duplicatedItem);
+          }
         }
       });
 
@@ -85,8 +101,13 @@ export const ClientLogos = ({
         className={cn(
           "flex min-w-full shrink-0 gap-[var(--gap)] py-4 w-max flex-nowrap",
           start && "animate-scroll",
-          pauseOnHover && "hover:[animation-play-state:paused]"
+          pauseOnHover && "hover:[animation-play-state:paused]",
+          "will-change-transform transform-gpu"
         )}
+        style={{
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden'
+        }}
       >
         {items.map((item, idx) => (
           <li

@@ -259,7 +259,7 @@ const timeline = [
   {
     year: "3+",
     title: "Už viac než 3 roky pomáhame firmám rásť",
-    description: "Stalo sa to našou vášňou. Našou drogou. My vyhrávame vtedy, keď vyhrávame vy."
+    description: "Stalo sa to našou vášňou. Našou drogou. My vyhrávame vtedy, keď vyhrávate vy."
   }
 ];
 
@@ -777,7 +777,7 @@ export default function Home() {
               className="max-w-3xl mx-auto mb-10 sm:mb-12"
             >
               <p className="text-lg sm:text-xl text-neutral-300 leading-relaxed">
-              Skvelá služba alebo produkt nestačí, ak nej nikto nevie.
+              Skvelá služba alebo produkt nestačí, ak o nej nikto nevie.
 Pomáhame firmám vytvoriť silnú online identitu, ktorá premení pozornosť na reálne
 výsledky.
 Sme dravý tím, ktorý neustále sleduje trendy a tvorí videá, ktoré nielen vyzerajú dobre ale
@@ -968,7 +968,7 @@ hlavne fungujú.
                 viewport={{ once: true }}
                 className="text-base sm:text-lg text-gray-300 max-w-4xl mx-auto leading-relaxed px-4"
               >
-                Sme najkreatívnejší a najvýkonnejší tím, ktorý nepracuje preto, že musí ale preto, že chce. My vyhrávame vtedy, keď vyhrávame vy a preto nám na výsledkoch tak záleží!
+                Sme najkreatívnejší a najvýkonnejší tím, ktorý nepracuje preto, že musí ale preto, že chce. My vyhrávame vtedy, keď vyhrávate vy a preto nám na výsledkoch tak záleží!
               </motion.p>
             </div>
           </div>
@@ -1355,7 +1355,7 @@ const BurstTimeline = () => {
       },
       {
         headline: "3+",
-        sub: "Už viac než 3 roky pomáhame firmám rásť. Stalo sa to našou vášňou. Našou drogou. My vyhrávame vtedy, keď vyhrávame vy."
+        sub: "Už viac než 3 roky pomáhame firmám rásť. Stalo sa to našou vášňou. Našou drogou. My vyhrávame vtedy, keď vyhrávate vy."
       }
     ];
 

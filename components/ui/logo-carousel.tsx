@@ -31,7 +31,7 @@ const LogoCarousel = () => {
                   alt={`Client logo ${index + 1}`}
                   fill
                   className="object-contain"
-                  sizes="(max-width: 640px) 80px, (max-width: 768px) 95px, (max-width: 1024px) 120px, 140px"
+                  sizes="(max-width: 640px) 100px, (max-width: 768px) 120px, (max-width: 1024px) 120px, 140px"
                   loading="lazy"
                 />
               </div>
@@ -47,7 +47,7 @@ const LogoCarousel = () => {
                   alt={`Client logo ${index + 1}`}
                   fill
                   className="object-contain"
-                  sizes="(max-width: 640px) 80px, (max-width: 768px) 95px, (max-width: 1024px) 120px, 140px"
+                  sizes="(max-width: 640px) 100px, (max-width: 768px) 120px, (max-width: 1024px) 120px, 140px"
                   loading="lazy"
                 />
               </div>

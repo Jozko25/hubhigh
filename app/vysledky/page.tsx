@@ -152,6 +152,7 @@ export default function Vysledky() {
               title="Reklamy"
               description="Konkrétne výsledky z platených kampaní na Meta platformách"
               images={performanceImages}
+              mobileColumns={1}
             />
           </div>
         </section>

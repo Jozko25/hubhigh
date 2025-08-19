@@ -36,10 +36,16 @@ interface ResultsGalleryProps {
   title: string;
   description: string;
   images: string[];
+  mobileColumns?: 1 | 2; // Optional prop to control mobile columns
 }
 
-export const ResultsGallery: React.FC<ResultsGalleryProps> = ({ title, description, images }) => {
+export const ResultsGallery: React.FC<ResultsGalleryProps> = ({ title, description, images, mobileColumns = 2 }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // Dynamic column classes based on mobileColumns prop
+  const columnClasses = mobileColumns === 1 
+    ? "columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4"
+    : "columns-2 sm:columns-3 md:columns-4 gap-4";
 
   return (
     <motion.div
@@ -52,7 +58,7 @@ export const ResultsGallery: React.FC<ResultsGalleryProps> = ({ title, descripti
       <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{title}</h3>
       <p className="text-gray-300 mb-8">{description}</p>
       
-      <div className="columns-2 sm:columns-3 md:columns-4 gap-4">
+      <div className={columnClasses}>
         {images.map((src, index) => (
           <ImageCard key={index} src={src} alt={`${title} - Result ${index + 1}`} onClick={() => setSelectedImage(src)} />
         ))}
